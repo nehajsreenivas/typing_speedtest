@@ -1,1 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TypeQuest – Typing Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+  --bg: #f5ede3;
+  --panel: #e6d5c3;
+  --border: #c4a484;
 
+  --accent: #7b2d26;   /* maroon */
+  --accent2: #a44a3f;  /* soft red */
+  --accent3: #8b6b4f;  /* brown */
+
+  --text: #3b2f2f;
+  --muted: #7a6a5a;
+
+  --correct: #6b8e23;
+  --wrong: #b23a3a;
+
+  --glow: 0 0 12px rgba(123,45,38,0.25);
+}
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: 'Playfair Display', serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: block;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    /* Animated background grid */
+    body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle at center, #f5ede3, #e6d5c3);
+        z-index: 0;
+    }
+
+    .wrapper {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 820px;
+        margin: 0 auto;
+        margin-top: 40px;
+    }
+
+    /* HEADER */
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+        font-family: 'Dancing Script', cursive;
+        font-size: 48px;
+        letter-spacing: 2px;
+        color: var(--accent);
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 2px;
+      margin-top: 6px;
+      text-transform: uppercase;
+    }
+
+    /* LEVEL SELECT SCREEN */
+    #levelSelect {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    #levelSelect h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      letter-spacing: 3px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      width: 100%;
+    }
+
+    .level-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .level-card:hover {
+      border-color: var(--accent);
+      box-shadow: var(--glow);
+      transform: translateY(-2px);
+    }
+
+    .level-card.locked {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .level-card.locked:hover {
+      border-color: var(--border);
+      box-shadow: none;
+      transform: none;
+    }
+
+    .level-card .num {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--accent);
+    }
+
+    .level-card .stars {
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    .level-card .lock-icon {
+      font-size: 20px;
+      margin-top: 6px;
+    }
+
+    .best-tag {
+      position: absolute;
+      top: 6px; right: 6px;
+      font-size: 9px;
+      background: var(--accent3);
+      color: #000;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    /* GAME SCREEN */
+    #gameScreen {display: none; }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .level-badge {
+        font-family: 'Playfair Display', serif;
+        font-size: 14px;
+        color: var(--accent);
+        background: var(--panel);
+        border: 1px solid var(--border);
+        padding: 6px 14px;
+        border-radius: 12px;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .stat-pill {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 6px 14px;
+        font-size: 14px;
+        color: var(--text);
+    }
+
+    .stat-pill .lbl { color: var(--muted); font-size: 12px; }
+    .stat-pill .val { font-weight: bold; color: var(--accent); }
+    .stat-pill.timer .val { color: var(--accent2); }
+    .stat-pill.wpm .val   { color: var(--accent); }
+    .stat-pill.acc .val   { color: var(--accent3); }
+
+    /* Progress bar */
+    .progress-wrap {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      height: 6px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent3));
+      border-radius: 4px;
+      transition: width 0.3s;
+      width: 0%;
+    }
+
+    /* Passage */
+    .passage-wrap {
+        font-family: "Times New Roman", serif;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      font-size: 20px;
+      line-height: 2;
+      letter-spacing: 0.5px;
+      margin-bottom: 18px;
+      min-height: 120px;
+      position: relative;
+    }
+
+    .passage-wrap span.correct { color: var(--correct); }
+    .passage-wrap span.wrong   { color: var(--wrong); background: rgba(255,77,109,0.15); border-radius: 3px; }
+    .passage-wrap span.current { border-bottom: 2px solid var(--accent); animation: blink 1s infinite; }
+    .passage-wrap span.pending { color: var(--muted); }
+
+    @keyframes blink {
+      0%,100% { border-color: var(--accent); }
+      50%      { border-color: transparent; }
+    }
+
+    /* Input */
+    textarea {
+      width: 100%;
+      background: var(--panel);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      font-size: 16px;
+      font-family: "Times New Roman", serif;
+      color: var(--text);
+      resize: none;
+      outline: none;
+      height: 80px;
+      transition: border 0.2s;
+    }
+
+    textarea:focus { border-color: var(--accent); box-shadow: var(--glow); }
+    textarea:disabled { opacity: 0.4; cursor: not-allowed; }
+    textarea::placeholder { color: var(--muted); }
+
+    /* Buttons */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      justify-content: flex-end;
+    }
+
+    button {
+        font-family: 'Playfair Display', serif;
+      font-size: 12px;
+      letter-spacing: 2px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+
+    #startBtn {
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+    }
+    #startBtn:hover { box-shadow: var(--glow); transform: translateY(-1px); }
+    #startBtn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    #backBtn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    #backBtn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    /* RESULT OVERLAY */
+    #resultOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(6px);
+    }
+
+    #resultOverlay.show { display: flex; }
+
+    .result-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px;
+      text-align: center;
+      max-width: 460px;
+      width: 90%;
+      animation: popIn 0.3s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to   { transform: scale(1);    opacity: 1; }
+    }
+
+    .result-card .emoji { font-size: 56px; margin-bottom: 16px; }
+
+    .result-card h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      margin-bottom: 6px;
+    }
+
+    .result-card h2.pass { color: var(--accent); }
+    .result-card h2.fail { color: var(--accent2); }
+
+    .result-card .msg {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 24px;
+      line-height: 1.7;
+    }
+
+    .result-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .r-stat {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .r-stat .rv { font-size: 24px; font-weight: 700; font-family: 'Orbitron', sans-serif; }
+    .r-stat .rl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+    .result-card .btn-group { display: flex; gap: 10px; justify-content: center; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      padding: 12px 22px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      text-transform: uppercase;
+      transition: 0.2s;
+    }
+    .btn-primary:hover { box-shadow: var(--glow); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      padding: 12px 22px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    /* Total Score bar */
+    .score-bar {
+        display: flex;
+        justify-content: center;
+        gap: 40px;
+        background: var(--panel);
+        border: 2px solid var(--border);
+        border-radius: 18px;
+        padding: 14px 30px;
+        margin-bottom: 20px;
+        font-family: 'Playfair Display', serif;
+        font-size: 18px;
+    }
+    .score-item {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    .score-item .lbl {
+        font-size: 18px;
+        color: var(--text);
+    }
+    .score-item .num {
+        font-size: 22px;
+        font-weight: bold;
+        color: var(--accent);
+    }
+
+
+
+    /* Shake animation for wrong */
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-6px); }
+      60%      { transform: translateX(6px); }
+    }
+    .shake { animation: shake 0.3s ease; }
+
+    /* Requirement badge */
+    .req-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--accent3);
+      background: rgba(255,214,10,0.08);
+      border: 1px solid rgba(255,214,10,0.2);
+      border-radius: 20px;
+      padding: 4px 12px;
+      margin-bottom: 16px;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <header>
+    <h1>TYPEQUEST</h1>
+    <p>Type, practice, repeat.</p>
+  </header>
+
+  <!-- LEVEL SELECT -->
+   <div id="levelSelect">
+   <div class="score-bar">
+    <div class="score-item">
+        <span class="lbl">TOTAL SCORE</span>
+        <span class="num" id="totalScoreDisplay">0</span>
+    </div>
+    
+    <div class="score-item">
+        <span class="lbl">STREAK</span>
+        <span class="num" id="streakDisplay">0</span>
+    </div>
+  </div>
+    <h2>Choose Your Level</h2>
+    <div class="level-grid" id="levelGrid"></div>
+    </div>
+</div>
+
+  <!-- GAME SCREEN -->
+  <div id="gameScreen">
+    <div class="top-bar">
+      <div class="level-badge" id="levelBadge">LEVEL 1</div>
+      <div class="stats-row">
+        <div class="stat-pill timer"><span class="lbl">TIME</span><span class="val" id="timerVal">--</span></div>
+        <div class="stat-pill wpm"><span class="lbl">WPM</span><span class="val" id="wpmVal">0</span></div>
+        <div class="stat-pill acc"><span class="lbl">ACC</span><span class="val" id="accVal">100%</span></div>
+      </div>
+    </div>
+
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+    <div class="req-badge" id="reqBadge">⭐ Need 100% accuracy to pass</div>
+
+    <div class="passage-wrap" id="passageBox"></div>
+
+    <textarea id="inputBox" placeholder="Press Start — then type here..." disabled></textarea>
+
+    <div class="btn-row">
+      <button id="backBtn" onclick="goBack()">← Levels</button>
+      <button id="startBtn" onclick="startRound()">Start</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT OVERLAY -->
+<div id="resultOverlay">
+  <div class="result-card">
+    <div class="emoji" id="resultEmoji"></div>
+    <h2 id="resultTitle"></h2>
+    <p class="msg" id="resultMsg"></p>
+    <div class="result-stats">
+      <div class="r-stat"><div class="rv" id="rWpm" style="color:var(--accent)">0</div><div class="rl">WPM</div></div>
+      <div class="r-stat"><div class="rv" id="rAcc" style="color:var(--accent3)">0%</div><div class="rl">Accuracy</div></div>
+      <div class="r-stat"><div class="rv" id="rScore" style="color:var(--accent2)">0</div><div class="rl">Points</div></div>
+    </div>
+    <div class="btn-group" id="resultBtns"></div>
+  </div>
+</div>
+
+<script>
+// ─── LEVEL DATA ───────────────────────────────────────────────────────────────
+const LEVELS = [
+  {
+    name: "Rookie",
+    time: 60,
+    passages: [
+      "the cat sat on the mat",
+      "I like to eat cake and pie",
+      "the dog ran fast in the park",
+      "she had a big red ball",
+    ]
+  },
+  {
+    name: "Novice",
+    time: 55,
+    passages: [
+      "The sun sets in the west every evening.",
+      "She opened the door and walked outside slowly.",
+      "He reads books every night before going to bed.",
+    ]
+  },
+  {
+    name: "Adept",
+    time: 50,
+    passages: [
+      "The quick brown fox jumps over the lazy dog near the river.",
+      "Learning to type fast requires daily practice and patience.",
+      "Every morning she jogged three miles along the beach path.",
+    ]
+  },
+  {
+    name: "Skilled",
+    time: 45,
+    passages: [
+      "Consistency is the key to mastering any skill over time, including typing.",
+      "The ancient library held thousands of books from centuries long past.",
+      "Programming teaches you to think logically and solve complex problems.",
+    ]
+  },
+  {
+    name: "Expert",
+    time: 40,
+    passages: [
+      "The phenomenon of quantum entanglement challenges our intuitive understanding of physics.",
+      "Artificial intelligence is rapidly transforming industries across the entire global economy.",
+      "She meticulously analyzed the data, searching for patterns hidden within the noise.",
+    ]
+  },
+  {
+    name: "Master",
+    time: 35,
+    passages: [
+      "The labyrinthine corridors of bureaucracy often frustrate even the most patient individuals.",
+      "Cryptography relies on mathematical problems that are computationally infeasible to reverse.",
+      "The Renaissance was characterized by a profound humanist philosophy and artistic innovation.",
+    ]
+  },
+  {
+    name: "Elite",
+    time: 30,
+    passages: [
+      "Photosynthesis converts electromagnetic radiation from the sun into chemical energy stored in glucose molecules.",
+      "The juxtaposition of modern architecture against ancient ruins creates a fascinating visual dichotomy.",
+      "Epistemology, the branch of philosophy concerned with knowledge, examines its nature and justification.",
+    ]
+  },
+  {
+    name: "Legendary",
+    time: 25,
+    passages: [
+      "Mitochondrial dysfunction has been implicated in a wide variety of neurodegenerative pathologies.",
+      "The axioms of Euclidean geometry formed the foundation of mathematical reasoning for over two millennia.",
+      "Electromagnetic phenomena are described by Maxwell's equations, unifying electricity, magnetism, and optics.",
+    ]
+  },
+  {
+    name: "Mythic",
+    time: 20,
+    passages: [
+      "Tergiversation, the act of making evasive statements, is frequently observed in political discourse.",
+      "The phenomenological approach in philosophy prioritizes first-person conscious experience as primary data.",
+      "Superconductivity occurs when electrical resistance drops to zero below a critical temperature threshold.",
+    ]
+  },
+  {
+    name: "GOD MODE",
+    time: 15,
+    passages: [
+      "Phosphorylation cascades in eukaryotic signal transduction modulate transcriptional regulation profoundly.",
+      "The incompleteness theorems of Gödel demonstrated fundamental limitations within any consistent formal system.",
+      "Neuroplasticity enables synaptic reorganization in response to experiential and environmental perturbations.",
+    ]
+  },
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let unlockedLevels = JSON.parse(localStorage.getItem('tq_unlocked') || '[0]');
+let totalScore     = parseInt(localStorage.getItem('tq_score') || '0');
+let bestWPM        = JSON.parse(localStorage.getItem('tq_bestwpm') || '{}');
+let streak = parseInt(localStorage.getItem("tq_streak") || "0");
+let lastPlayed = localStorage.getItem("tq_last") || "";
+
+let currentLevel = 0;
+let currentPassage = "";
+let charIndex = 0, mistakes = 0, totalTyped = 0;
+let timeLeft = 60, timerInterval = null;
+let started = false, finished = false;
+
+// ─── LEVEL SELECT ─────────────────────────────────────────────────────────────
+function renderLevelSelect() {
+  document.getElementById('totalScoreDisplay').textContent = totalScore;
+  document.getElementById('streakDisplay').textContent = streak;
+  const grid = document.getElementById('levelGrid');
+  grid.innerHTML = '';
+
+  LEVELS.forEach((lvl, i) => {
+    const locked = !unlockedLevels.includes(i);
+    const card = document.createElement('div');
+    card.className = 'level-card' + (locked ? ' locked' : '');
+
+    const best = bestWPM[i];
+    card.innerHTML = `
+  ${best ? `<div class="best-tag">${best}wpm</div>` : ''}
+  <div class="num">${i + 1}</div>
+  <div class="stars">${getStars(i)}</div>
+  ${locked ? '<div class="lock-icon">🔒</div>' : ''}
+  `;
+    if (!locked) card.onclick = () => openLevel(i);
+    grid.appendChild(card);
+  });
+}
+
+function getStars(i) {
+  if (!unlockedLevels.includes(i)) return '⬛⬛⬛';
+  const wpm = bestWPM[i] || 0;
+  const lvl = LEVELS[i];
+  const target = lvl.time < 20 ? 60 : lvl.time < 30 ? 50 : lvl.time < 40 ? 40 : 30;
+  if (wpm >= target * 1.5) return '⭐⭐⭐';
+  if (wpm >= target) return '⭐⭐';
+  if (wpm > 0) return '⭐';
+  return '☆☆☆';
+}
+
+function openLevel(i) {
+  currentLevel = i;
+  document.getElementById('levelSelect').style.display = 'none';
+  document.getElementById('gameScreen').style.display = 'block';
+  setupRound();
+}
+
+function goBack() {
+  clearInterval(timerInterval);
+  document.getElementById('gameScreen').style.display = 'none';
+  document.getElementById('levelSelect').style.display = 'flex';
+  renderLevelSelect();
+}
+
+// ─── GAME LOGIC ───────────────────────────────────────────────────────────────
+function setupRound() {
+  const lvl = LEVELS[currentLevel];
+  charIndex = 0; mistakes = 0; totalTyped = 0; started = false; finished = false;
+  timeLeft = lvl.time;
+  clearInterval(timerInterval);
+
+  document.getElementById('levelBadge').textContent =`LEVEL ${currentLevel + 1}`;
+  document.getElementById('timerVal').textContent = timeLeft + 's';
+  document.getElementById('wpmVal').textContent = '0';
+  document.getElementById('accVal').textContent = '100%';
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('inputBox').value = '';
+  document.getElementById('inputBox').disabled = true;
+  document.getElementById('startBtn').disabled = false;
+
+  const passages = lvl.passages;
+  currentPassage = passages[Math.floor(Math.random() * passages.length)];
+  renderPassage();
+}
+
+function renderPassage() {
+  document.getElementById('passageBox').innerHTML = currentPassage.split('').map((ch, i) =>
+    `<span class="${i === 0 ? 'current' : 'pending'}">${ch === ' ' ? '&nbsp;' : ch}</span>`
+  ).join('');
+}
+
+function startRound() {
+  if (started) return;
+  started = true;
+  document.getElementById('inputBox').disabled = false;
+  document.getElementById('inputBox').focus();
+  document.getElementById('startBtn').disabled = true;
+
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    document.getElementById('timerVal').textContent = timeLeft + 's';
+    updateStats();
+    if (timeLeft <= 0) finishRound(false, true);
+  }, 1000);
+}
+
+function updateStats() {
+  const elapsed = LEVELS[currentLevel].time - timeLeft || 0.01;
+  const words = totalTyped / 5;
+  const wpm = Math.round(words / (elapsed / 60));
+  const acc = totalTyped === 0 ? 100 : Math.round(((totalTyped - mistakes) / totalTyped) * 100);
+  document.getElementById('wpmVal').textContent = wpm;
+  document.getElementById('accVal').textContent = acc + '%';
+  document.getElementById('progressBar').style.width =
+    Math.min(100, Math.round((charIndex / currentPassage.length) * 100)) + '%';
+}
+
+function finishRound(completed, timeUp = false) {
+  clearInterval(timerInterval);
+  finished = true;
+  document.getElementById('inputBox').disabled = true;
+
+  const lvl = LEVELS[currentLevel];
+  const elapsed = lvl.time - timeLeft || 0.01;
+  const words = totalTyped / 5;
+  const wpm = Math.round(words / (elapsed / 60));
+  const acc = totalTyped === 0 ? 0 : Math.round(((totalTyped - mistakes) / totalTyped) * 100);
+  const passed = completed && acc === 100;
+
+  // Score calculation
+  let points = 0;
+  if (passed) {
+    points = Math.round(wpm * (currentLevel + 1) * 10);
+    totalScore += points;
+    localStorage.setItem('tq_score', totalScore);
+
+    // Unlock next level
+    const next = currentLevel + 1;
+    if (next < LEVELS.length && !unlockedLevels.includes(next)) {
+      unlockedLevels.push(next);
+      localStorage.setItem('tq_unlocked', JSON.stringify(unlockedLevels));
+    }
+
+    // Save best WPM
+    if (!bestWPM[currentLevel] || wpm > bestWPM[currentLevel]) {
+      bestWPM[currentLevel] = wpm;
+      localStorage.setItem('tq_bestwpm', JSON.stringify(bestWPM));
+    }
+    const today = new Date().toDateString();
+
+    if (lastPlayed !== today) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        if (lastPlayed === yesterday.toDateString()) {
+            streak++;
+        } else {
+            streak = 1;
+        }
+        localStorage.setItem("tq_streak", streak);
+        localStorage.setItem("tq_last", today);
+    }
+  }
+
+  showResult(passed, timeUp, wpm, acc, points);
+}
+
+function showResult(passed, timeUp, wpm, acc, points) {
+  const overlay = document.getElementById('resultOverlay');
+  const isLastLevel = currentLevel === LEVELS.length - 1;
+
+  document.getElementById('resultEmoji').textContent = passed ? (isLastLevel ? '👑' : '🚀') : (timeUp ? '⏰' : '❌');
+  document.getElementById('resultTitle').textContent = passed ? (isLastLevel ? 'LEGENDARY!' : 'LEVEL CLEARED!') : (timeUp ? 'TIME\'S UP!' : 'ALMOST!');
+  document.getElementById('resultTitle').className = passed ? 'pass' : 'fail';
+  document.getElementById('rWpm').textContent = wpm;
+  document.getElementById('rAcc').textContent = acc + '%';
+  document.getElementById('rScore').textContent = '+' + points;
+
+  let msg = '';
+  if (passed) {
+    msg = isLastLevel
+      ? `You've conquered all levels! ${wpm} WPM at 100% accuracy is truly elite.`
+      : `Perfect accuracy! You earned ${points} points and unlocked Level ${currentLevel + 2}.`;
+  } else if (timeUp) {
+    msg = `You ran out of time! Accuracy was ${acc}%. You need 100% to advance — try again!`;
+  } else {
+    msg = `Accuracy was ${acc}%. You need 100% to move to the next level. Keep practicing!`;
+  }
+  document.getElementById('resultMsg').textContent = msg;
+
+  const btns = document.getElementById('resultBtns');
+  btns.innerHTML = '';
+
+  if (passed && !isLastLevel) {
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'btn-primary';
+    nextBtn.textContent = 'Next Level →';
+    nextBtn.onclick = () => { overlay.classList.remove('show'); currentLevel++; setupRound(); };
+    btns.appendChild(nextBtn);
+  }
+
+  const retryBtn = document.createElement('button');
+  retryBtn.className = passed ? 'btn-secondary' : 'btn-primary';
+  retryBtn.textContent = 'Retry';
+  retryBtn.onclick = () => { overlay.classList.remove('show'); setupRound(); };
+  btns.appendChild(retryBtn);
+
+  const menuBtn = document.createElement('button');
+  menuBtn.className = 'btn-secondary';
+  menuBtn.textContent = 'Levels';
+  menuBtn.onclick = () => { overlay.classList.remove('show'); goBack(); };
+  btns.appendChild(menuBtn);
+
+  overlay.classList.add('show');
+}
+
+// ─── INPUT HANDLER ────────────────────────────────────────────────────────────
+document.getElementById('inputBox').addEventListener('input', function() {
+  if (!started || finished) return;
+  const typed = this.value;
+  const spans = document.querySelectorAll('#passageBox span');
+
+  charIndex = 0; mistakes = 0; totalTyped = typed.length;
+
+  for (let i = 0; i < typed.length && i < currentPassage.length; i++) {
+    if (typed[i] === currentPassage[i]) {
+      spans[i].className = 'correct';
+    } else {
+      spans[i].className = 'wrong';
+      mistakes++;
+    }
+    charIndex = i + 1;
+  }
+
+  // Reset remaining
+  for (let i = charIndex; i < spans.length; i++) {
+    spans[i].className = i === charIndex ? 'current' : 'pending';
+  }
+
+  updateStats();
+
+  // Shake on mistake
+  if (mistakes > 0) {
+    document.getElementById('passageBox').classList.remove('shake');
+    void document.getElementById('passageBox').offsetWidth;
+    document.getElementById('passageBox').classList.add('shake');
+  }
+
+  if (charIndex === currentPassage.length) finishRound(true);
+});
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+renderLevelSelect();
+</script>
+</body>
+</html>
