@@ -7,13 +7,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root {
-  --bg: #f5ede3;
-  --panel: #e6d5c3;
+  --bg: #e6d5c3;        /* FIX 1: solid darker panel color */
+  --panel: #dbc9b4;
   --border: #c4a484;
 
-  --accent: #7b2d26;   /* maroon */
-  --accent2: #a44a3f;  /* soft red */
-  --accent3: #8b6b4f;  /* brown */
+  --accent: #7b2d26;
+  --accent2: #a44a3f;
+  --accent3: #8b6b4f;
 
   --text: #3b2f2f;
   --muted: #7a6a5a;
@@ -27,34 +27,22 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-        font-family: 'Playfair Display', serif;
-      background: var(--bg);
+      font-family: 'Playfair Display', serif;
+      background: var(--bg); /* FIX 1: solid, no gradient */
       color: var(--text);
       min-height: 100vh;
       display: block;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
       padding: 20px;
       overflow-y: auto;
     }
 
-    /* Animated background grid */
-    body::before {
-        content: '';
-        position: fixed;
-        inset: 0;
-        background: radial-gradient(circle at center, #f5ede3, #e6d5c3);
-        z-index: 0;
-    }
-
     .wrapper {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        max-width: 820px;
-        margin: 0 auto;
-        margin-top: 40px;
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 820px;
+      margin: 0 auto;
+      margin-top: 40px;
     }
 
     /* HEADER */
@@ -64,10 +52,10 @@
     }
 
     header h1 {
-        font-family: 'Dancing Script', cursive;
-        font-size: 48px;
-        letter-spacing: 2px;
-        color: var(--accent);
+      font-family: 'Dancing Script', cursive;
+      font-size: 48px;
+      letter-spacing: 2px;
+      color: var(--accent);
     }
 
     header p {
@@ -87,7 +75,6 @@
     }
 
     #levelSelect h2 {
-      font-family: 'Orbitron', sans-serif;
       font-size: 16px;
       letter-spacing: 3px;
       color: var(--muted);
@@ -131,7 +118,6 @@
     }
 
     .level-card .num {
-      font-family: 'Orbitron', sans-serif;
       font-size: 28px;
       font-weight: 900;
       color: var(--accent);
@@ -159,8 +145,12 @@
       letter-spacing: 1px;
     }
 
-    /* GAME SCREEN */
-    #gameScreen {display: none; }
+    /* GAME SCREEN — FIX 3: constrain width to 65% */
+    #gameScreen {
+      display: none;
+      max-width: 65%;
+      margin: 0 auto;
+    }
 
     .top-bar {
       display: flex;
@@ -170,13 +160,13 @@
     }
 
     .level-badge {
-        font-family: 'Playfair Display', serif;
-        font-size: 14px;
-        color: var(--accent);
-        background: var(--panel);
-        border: 1px solid var(--border);
-        padding: 6px 14px;
-        border-radius: 12px;
+      font-family: 'Playfair Display', serif;
+      font-size: 14px;
+      color: var(--accent);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 12px;
     }
 
     .stats-row {
@@ -185,17 +175,18 @@
     }
 
     .stat-pill {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 6px 14px;
-        font-size: 14px;
-        color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 6px 14px;
+      font-size: 14px;
+      color: var(--text);
     }
 
     .stat-pill .lbl { color: var(--muted); font-size: 12px; }
     .stat-pill .val { font-weight: bold; color: var(--accent); }
-    .stat-pill.timer .val { color: var(--accent2); }
+    /* FIX 2: timer value in maroon */
+    .stat-pill.timer .val { color: var(--accent); }
     .stat-pill.wpm .val   { color: var(--accent); }
     .stat-pill.acc .val   { color: var(--accent3); }
 
@@ -219,7 +210,7 @@
 
     /* Passage */
     .passage-wrap {
-        font-family: "Times New Roman", serif;
+      font-family: "Times New Roman", serif;
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 14px;
@@ -230,12 +221,19 @@
       margin-bottom: 18px;
       min-height: 120px;
       position: relative;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: normal;
+      overflow: hidden;
     }
 
-    .passage-wrap span.correct { color: var(--correct); }
-    .passage-wrap span.wrong   { color: var(--wrong); background: rgba(255,77,109,0.15); border-radius: 3px; }
-    .passage-wrap span.current { border-bottom: 2px solid var(--accent); animation: blink 1s infinite; }
-    .passage-wrap span.pending { color: var(--muted); }
+    /* Keep whole words together — no mid-word line breaks */
+    .word-block { display: inline-block; white-space: nowrap; }
+    .space-char  { display: inline; }
+    .passage-wrap span.correct { color: var(--correct); display: inline; }
+    .passage-wrap span.wrong   { color: var(--wrong); background: rgba(255,77,109,0.15); border-radius: 3px; display: inline; }
+    .passage-wrap span.current { border-bottom: 2px solid var(--accent); animation: blink 1s infinite; display: inline; }
+    .passage-wrap span.pending { color: var(--muted); display: inline; }
 
     @keyframes blink {
       0%,100% { border-color: var(--accent); }
@@ -271,7 +269,7 @@
     }
 
     button {
-        font-family: 'Playfair Display', serif;
+      font-family: 'Playfair Display', serif;
       font-size: 12px;
       letter-spacing: 2px;
       padding: 12px 24px;
@@ -282,9 +280,10 @@
       text-transform: uppercase;
     }
 
+    /* FIX 2: Start button — maroon bg, beige text */
     #startBtn {
       background: var(--accent);
-      color: white;
+      color: #f5ede3;
       font-weight: 700;
     }
     #startBtn:hover { box-shadow: var(--glow); transform: translateY(-1px); }
@@ -330,7 +329,6 @@
     .result-card .emoji { font-size: 56px; margin-bottom: 16px; }
 
     .result-card h2 {
-      font-family: 'Orbitron', sans-serif;
       font-size: 22px;
       margin-bottom: 6px;
     }
@@ -359,15 +357,15 @@
       padding: 14px;
     }
 
-    .r-stat .rv { font-size: 24px; font-weight: 700; font-family: 'Orbitron', sans-serif; }
+    .r-stat .rv { font-size: 24px; font-weight: 700; }
     .r-stat .rl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
 
     .result-card .btn-group { display: flex; gap: 10px; justify-content: center; }
 
     .btn-primary {
       background: var(--accent);
-      color: #000;
-      font-family: 'Orbitron', sans-serif;
+      color: #f5ede3;
+      font-family: 'Playfair Display', serif;
       font-size: 11px;
       letter-spacing: 2px;
       padding: 12px 22px;
@@ -383,7 +381,7 @@
     .btn-secondary {
       background: transparent;
       color: var(--muted);
-      font-family: 'Orbitron', sans-serif;
+      font-family: 'Playfair Display', serif;
       font-size: 11px;
       letter-spacing: 2px;
       padding: 12px 22px;
@@ -397,33 +395,31 @@
 
     /* Total Score bar */
     .score-bar {
-        display: flex;
-        justify-content: center;
-        gap: 40px;
-        background: var(--panel);
-        border: 2px solid var(--border);
-        border-radius: 18px;
-        padding: 14px 30px;
-        margin-bottom: 20px;
-        font-family: 'Playfair Display', serif;
-        font-size: 18px;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      background: var(--panel);
+      border: 2px solid var(--border);
+      border-radius: 18px;
+      padding: 14px 30px;
+      margin-bottom: 20px;
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
     }
     .score-item {
-        display: flex;
-        gap: 8px;
-        align-items: center;
+      display: flex;
+      gap: 8px;
+      align-items: center;
     }
     .score-item .lbl {
-        font-size: 18px;
-        color: var(--text);
+      font-size: 18px;
+      color: var(--text);
     }
     .score-item .num {
-        font-size: 22px;
-        font-weight: bold;
-        color: var(--accent);
+      font-size: 22px;
+      font-weight: bold;
+      color: var(--accent);
     }
-
-
 
     /* Shake animation for wrong */
     @keyframes shake {
@@ -447,6 +443,64 @@
       margin-bottom: 16px;
       letter-spacing: 1px;
     }
+
+    /* WPM TOAST */
+    #wpmToast {
+      position: fixed;
+      bottom: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      transition: bottom 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      pointer-events: none;
+      width: 420px;
+      max-width: 90vw;
+    }
+    #wpmToast.show { bottom: 32px; }
+    #wpmToastInner {
+      background: #7b2d26;
+      border: 1px solid #a44a3f;
+      border-radius: 16px;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 8px 32px rgba(123,45,38,0.45);
+    }
+    .toast-emoji { font-size: 32px; flex-shrink: 0; }
+    .toast-text { text-align: left; }
+    .toast-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: #f5ede3;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .toast-msg {
+      font-family: 'Playfair Display', serif;
+      font-size: 13px;
+      color: #e6d5c3;
+      line-height: 1.5;
+    }
+    .toast-msg strong { color: #fff; }
+    .toast-close {
+      background: transparent;
+      border: 1px solid rgba(245,237,227,0.4);
+      color: #f5ede3;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      cursor: pointer;
+      flex-shrink: 0;
+      align-self: flex-start;
+      padding: 0;
+      line-height: 1;
+      transition: background 0.2s;
+      pointer-events: all;
+    }
+    .toast-close:hover { background: rgba(245,237,227,0.15); }
   </style>
 </head>
 <body>
@@ -457,46 +511,49 @@
   </header>
 
   <!-- LEVEL SELECT -->
-   <div id="levelSelect">
-   <div class="score-bar">
-    <div class="score-item">
+  <div id="levelSelect">
+    <div class="score-bar">
+      <div class="score-item">
         <span class="lbl">TOTAL SCORE</span>
         <span class="num" id="totalScoreDisplay">0</span>
-    </div>
-    
-    <div class="score-item">
+      </div>
+      <div class="score-item">
         <span class="lbl">STREAK</span>
         <span class="num" id="streakDisplay">0</span>
-    </div>
-  </div>
-    <h2>Choose Your Level</h2>
-    <div class="level-grid" id="levelGrid"></div>
-    </div>
-</div>
-
-  <!-- GAME SCREEN -->
-  <div id="gameScreen">
-    <div class="top-bar">
-      <div class="level-badge" id="levelBadge">LEVEL 1</div>
-      <div class="stats-row">
-        <div class="stat-pill timer"><span class="lbl">TIME</span><span class="val" id="timerVal">--</span></div>
-        <div class="stat-pill wpm"><span class="lbl">WPM</span><span class="val" id="wpmVal">0</span></div>
-        <div class="stat-pill acc"><span class="lbl">ACC</span><span class="val" id="accVal">100%</span></div>
       </div>
     </div>
+    <h2>Choose Your Level</h2>
+    <div class="level-grid" id="levelGrid"></div>
+  </div>
+</div>
 
-    <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+<!-- GAME SCREEN — sits outside .wrapper so it can be full-centered at 65% -->
+<div id="gameScreen">
+  <header style="text-align:center; margin-bottom: 32px; margin-top: 40px;">
+    <h1 style="font-family:'Dancing Script',cursive; font-size:48px; color:#7b2d26; letter-spacing:2px;">TYPEQUEST</h1>
+    <p style="color:#7a6a5a; font-size:13px; letter-spacing:2px; margin-top:6px; text-transform:uppercase;">Type, practice, repeat.</p>
+  </header>
 
-    <div class="req-badge" id="reqBadge">⭐ Need 100% accuracy to pass</div>
-
-    <div class="passage-wrap" id="passageBox"></div>
-
-    <textarea id="inputBox" placeholder="Press Start — then type here..." disabled></textarea>
-
-    <div class="btn-row">
-      <button id="backBtn" onclick="goBack()">← Levels</button>
-      <button id="startBtn" onclick="startRound()">Start</button>
+  <div class="top-bar">
+    <div class="level-badge" id="levelBadge">LEVEL 1</div>
+    <div class="stats-row">
+      <div class="stat-pill timer"><span class="lbl">TIME&nbsp;</span><span class="val" id="timerVal">--</span></div>
+      <div class="stat-pill wpm"><span class="lbl">WPM&nbsp;</span><span class="val" id="wpmVal">0</span></div>
+      <div class="stat-pill acc"><span class="lbl">ACC&nbsp;</span><span class="val" id="accVal">100%</span></div>
     </div>
+  </div>
+
+  <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+  <div class="req-badge" id="reqBadge">⭐ Need 100% accuracy to pass</div>
+
+  <div class="passage-wrap" id="passageBox"></div>
+
+  <textarea id="inputBox" placeholder="Press Start — then type here..." disabled></textarea>
+
+  <div class="btn-row">
+    <button id="backBtn" onclick="goBack()">← Levels</button>
+    <button id="startBtn" onclick="startRound()">Start</button>
   </div>
 </div>
 
@@ -516,140 +573,139 @@
 </div>
 
 <script>
-// ─── LEVEL DATA ───────────────────────────────────────────────────────────────
 const LEVELS = [
+  // Level 1 — Rookie: 5–15 words, 60s
   {
-    name: "Rookie",
-    time: 60,
+    name: "Rookie", time: 60,
     passages: [
       "the cat sat on the mat",
-      "I like to eat cake and pie",
-      "the dog ran fast in the park",
       "she had a big red ball",
+      "the dog ran fast and far",
+      "I like to eat cake and pie",
+      "he picked up a small blue pen",
     ]
   },
+  // Level 2 — Novice: 5–15 words, 60s
   {
-    name: "Novice",
-    time: 55,
+    name: "Novice", time: 60,
     passages: [
-      "The sun sets in the west every evening.",
-      "She opened the door and walked outside slowly.",
-      "He reads books every night before going to bed.",
+      "the sun sets slowly in the west",
+      "she smiled and waved from across the room",
+      "he drank a warm cup of tea",
+      "the birds sang softly in the tall tree",
+      "we walked home under the bright full moon",
     ]
   },
+  // Level 3 — Adept: 5–15 words, 60s
   {
-    name: "Adept",
-    time: 50,
+    name: "Adept", time: 60,
     passages: [
-      "The quick brown fox jumps over the lazy dog near the river.",
-      "Learning to type fast requires daily practice and patience.",
-      "Every morning she jogged three miles along the beach path.",
+      "the old clock on the wall ticked very slowly",
+      "she opened the window and breathed in the cool air",
+      "he put his book down and looked out the window",
+      "the children laughed and played until the sun went down",
+      "she poured herself a glass of cold water and sat",
     ]
   },
+  // Level 4 — Skilled: 20–40 words, 60s
   {
-    name: "Skilled",
-    time: 45,
+    name: "Skilled", time: 60,
     passages: [
-      "Consistency is the key to mastering any skill over time, including typing.",
-      "The ancient library held thousands of books from centuries long past.",
-      "Programming teaches you to think logically and solve complex problems.",
+      "The morning light crept through the curtains as she sat at her desk, sipping coffee and watching the city slowly wake up around her.",
+      "He spent every evening reading by the fireplace, losing himself in stories of distant lands, curious people, and adventures he could only dream about.",
+      "The dog followed him everywhere he went, trotting beside him on quiet streets, always loyal, always patient, always ready for the next long walk.",
     ]
   },
+  // Level 5 — Expert: 20–40 words, 60s
   {
-    name: "Expert",
-    time: 40,
+    name: "Expert", time: 60,
     passages: [
-      "The phenomenon of quantum entanglement challenges our intuitive understanding of physics.",
-      "Artificial intelligence is rapidly transforming industries across the entire global economy.",
-      "She meticulously analyzed the data, searching for patterns hidden within the noise.",
+      "Learning a new language takes time, patience, and a willingness to make mistakes. The more you practice speaking, the faster your confidence begins to grow.",
+      "She trained every day without fail, running through the park at dawn, pushing past the fatigue, knowing that discipline was the only path to progress.",
+      "The library was her favourite place in the city. She loved the quiet hum of turning pages, the smell of old books, and the feeling of getting lost in words.",
     ]
   },
+  // Level 6 — Master: 20–40 words, 60s
   {
-    name: "Master",
-    time: 35,
+    name: "Master", time: 60,
     passages: [
-      "The labyrinthine corridors of bureaucracy often frustrate even the most patient individuals.",
-      "Cryptography relies on mathematical problems that are computationally infeasible to reverse.",
-      "The Renaissance was characterized by a profound humanist philosophy and artistic innovation.",
+      "Great writing is not about using complex words; it is about choosing the right ones. Clarity, rhythm, and intention matter far more than an impressive vocabulary.",
+      "Every skill that looks effortless in the hands of an expert was once slow and clumsy. What separates mastery from mediocrity is simply thousands of hours of deliberate practice.",
+      "The city at night felt like a different world altogether. Neon lights reflected off wet pavements, strangers moved quickly through the cold, and somewhere a saxophone played.",
     ]
   },
+  // Level 7 — Elite: 50–60 words, 60s
   {
-    name: "Elite",
-    time: 30,
+    name: "Elite", time: 60,
     passages: [
-      "Photosynthesis converts electromagnetic radiation from the sun into chemical energy stored in glucose molecules.",
-      "The juxtaposition of modern architecture against ancient ruins creates a fascinating visual dichotomy.",
-      "Epistemology, the branch of philosophy concerned with knowledge, examines its nature and justification.",
+      "The history of science is filled with ideas that were once considered absurd. Galileo was placed under house arrest for suggesting the Earth moved around the sun. Today, we build entire civilisations on that knowledge. Progress rarely arrives with applause; it usually begins with resistance, doubt, and a stubborn refusal to accept the way things have always been done.",
+      "She had spent three years learning to paint, not because she wanted to become an artist, but because she needed a language that words could not provide. There are feelings that live in colour and shape, in the drag of a brush and the weight of silence in a room. She found that language slowly, imperfectly, and entirely on her own terms.",
+      "The ocean has always humbled those who try to cross it. For centuries, sailors navigated by stars, read the wind, and trusted their instincts over instruments. There was a kind of courage in that — a willingness to move forward with incomplete knowledge, to commit to a direction and adjust along the way, one wave at a time.",
     ]
   },
+  // Level 8 — Legendary: 50–60 words, 60s
   {
-    name: "Legendary",
-    time: 25,
+    name: "Legendary", time: 60,
     passages: [
-      "Mitochondrial dysfunction has been implicated in a wide variety of neurodegenerative pathologies.",
-      "The axioms of Euclidean geometry formed the foundation of mathematical reasoning for over two millennia.",
-      "Electromagnetic phenomena are described by Maxwell's equations, unifying electricity, magnetism, and optics.",
+      "Attention is one of the most valuable things you possess. Every notification, every interruption, every meaningless scroll chips away at your capacity to think deeply. The people who build great things are not necessarily the most talented; they are the ones who learned to protect their focus and direct it, deliberately and consistently, toward what truly matters.",
+      "Memory is a strange and unreliable narrator. We do not remember events as they happened; we remember the last time we remembered them. Each recollection subtly reshapes the original. Over time, what we call a memory is less a recording and more a reconstruction — coloured by mood, expectation, and everything we have come to believe since.",
+      "Language shapes the way we think in ways that are difficult to perceive from inside a single tongue. The words available to us determine what we can easily express, and therefore what we notice. Some languages have words for emotions that others lack entirely. To learn a new language is not merely practical; it is a small expansion of consciousness.",
     ]
   },
+  // Level 9 — Mythic: 50–60 words, 60s
   {
-    name: "Mythic",
-    time: 20,
+    name: "Mythic", time: 60,
     passages: [
-      "Tergiversation, the act of making evasive statements, is frequently observed in political discourse.",
-      "The phenomenological approach in philosophy prioritizes first-person conscious experience as primary data.",
-      "Superconductivity occurs when electrical resistance drops to zero below a critical temperature threshold.",
+      "Discipline is not the opposite of freedom; it is the foundation of it. The musician who practises scales every morning is not enslaved to routine — she is buying herself the freedom to play anything she wants. Structure, when chosen deliberately, becomes a kind of liberation. It removes the daily negotiation of whether to begin and simply lets you work.",
+      "There is a particular quality of silence that exists only in the early hours before the world wakes. It is not the absence of sound so much as the presence of space — room to think without interruption, to exist without performance, to be nobody for a while. Many of the most creative minds in history have guarded these hours fiercely, almost jealously.",
+      "We tend to overestimate what we can do in a day and dramatically underestimate what we can do in a decade. A single page written each morning amounts to a novel inside a year. A short walk every evening adds up to hundreds of miles. Compounding is not just a financial principle; it is the quiet engine behind most meaningful human achievement.",
     ]
   },
+  // Level 10 — GOD MODE: ~70 words, heavy punctuation, 60s
   {
-    name: "GOD MODE",
-    time: 15,
+    name: "GOD MODE", time: 60,
     passages: [
-      "Phosphorylation cascades in eukaryotic signal transduction modulate transcriptional regulation profoundly.",
-      "The incompleteness theorems of Gödel demonstrated fundamental limitations within any consistent formal system.",
-      "Neuroplasticity enables synaptic reorganization in response to experiential and environmental perturbations.",
+      "Time — our most finite resource — is spent, not saved. You cannot defer it, pause it, or reclaim it; once gone, it is simply gone. Yet most people treat it as though it were abundant: saying yes too easily, delaying what matters, and filling hours with noise rather than meaning. Ask yourself, honestly: does the way you spend your days reflect the life you actually want to live?",
+      "What does it mean to think clearly? It means recognising your assumptions, questioning your conclusions, and holding your beliefs loosely enough to revise them when evidence demands it. Clear thinking is uncomfortable — it often leads you somewhere you did not plan to go. But the alternative is worse: moving confidently, even eloquently, in entirely the wrong direction. Precision of thought is rare, and for that reason, extraordinarily valuable.",
+      "The great paradox of modern life is this: we have more tools for connection than any generation before us — instant messaging, video calls, social networks spanning the globe — and yet loneliness has never been more widespread. Perhaps connection requires something that technology cannot provide: presence, attention, and the willingness to be truly known. We are, it seems, better at communicating than we are at actually reaching each other.",
     ]
   },
 ];
 
-// ─── STATE ────────────────────────────────────────────────────────────────────
 let unlockedLevels = JSON.parse(localStorage.getItem('tq_unlocked') || '[0]');
 let totalScore     = parseInt(localStorage.getItem('tq_score') || '0');
 let bestWPM        = JSON.parse(localStorage.getItem('tq_bestwpm') || '{}');
-let streak = parseInt(localStorage.getItem("tq_streak") || "0");
-let lastPlayed = localStorage.getItem("tq_last") || "";
+let streak         = parseInt(localStorage.getItem('tq_streak') || '0');
+let lastPlayed     = localStorage.getItem('tq_last') || '';
 
-let currentLevel = 0;
-let currentPassage = "";
+let currentLevel = 0, currentPassage = '';
 let charIndex = 0, mistakes = 0, totalTyped = 0;
 let timeLeft = 60, timerInterval = null;
 let started = false, finished = false;
 
-// ─── LEVEL SELECT ─────────────────────────────────────────────────────────────
 function renderLevelSelect() {
   document.getElementById('totalScoreDisplay').textContent = totalScore;
   document.getElementById('streakDisplay').textContent = streak;
   const grid = document.getElementById('levelGrid');
   grid.innerHTML = '';
-
   LEVELS.forEach((lvl, i) => {
     const locked = !unlockedLevels.includes(i);
     const card = document.createElement('div');
     card.className = 'level-card' + (locked ? ' locked' : '');
-
     const best = bestWPM[i];
     card.innerHTML = `
-  ${best ? `<div class="best-tag">${best}wpm</div>` : ''}
-  <div class="num">${i + 1}</div>
-  <div class="stars">${getStars(i)}</div>
-  ${locked ? '<div class="lock-icon">🔒</div>' : ''}
-  `;
+      ${best ? `<div class="best-tag">${best}wpm</div>` : ''}
+      <div class="num">${i + 1}</div>
+      <div class="stars">${getStars(i)}</div>
+      ${locked ? '<div class="lock-icon">🔒</div>' : ''}
+    `;
     if (!locked) card.onclick = () => openLevel(i);
     grid.appendChild(card);
   });
 }
 
 function getStars(i) {
-  if (!unlockedLevels.includes(i)) return '⬛⬛⬛';
+  if (!unlockedLevels.includes(i)) return '🟤🟤🟤';
   const wpm = bestWPM[i] || 0;
   const lvl = LEVELS[i];
   const target = lvl.time < 20 ? 60 : lvl.time < 30 ? 50 : lvl.time < 40 ? 40 : 30;
@@ -662,6 +718,7 @@ function getStars(i) {
 function openLevel(i) {
   currentLevel = i;
   document.getElementById('levelSelect').style.display = 'none';
+  document.querySelector('.wrapper').style.display = 'none';
   document.getElementById('gameScreen').style.display = 'block';
   setupRound();
 }
@@ -669,18 +726,17 @@ function openLevel(i) {
 function goBack() {
   clearInterval(timerInterval);
   document.getElementById('gameScreen').style.display = 'none';
+  document.querySelector('.wrapper').style.display = 'block';
   document.getElementById('levelSelect').style.display = 'flex';
   renderLevelSelect();
 }
 
-// ─── GAME LOGIC ───────────────────────────────────────────────────────────────
 function setupRound() {
   const lvl = LEVELS[currentLevel];
   charIndex = 0; mistakes = 0; totalTyped = 0; started = false; finished = false;
   timeLeft = lvl.time;
   clearInterval(timerInterval);
-
-  document.getElementById('levelBadge').textContent =`LEVEL ${currentLevel + 1}`;
+  document.getElementById('levelBadge').textContent = `LEVEL ${currentLevel + 1}`;
   document.getElementById('timerVal').textContent = timeLeft + 's';
   document.getElementById('wpmVal').textContent = '0';
   document.getElementById('accVal').textContent = '100%';
@@ -688,16 +744,29 @@ function setupRound() {
   document.getElementById('inputBox').value = '';
   document.getElementById('inputBox').disabled = true;
   document.getElementById('startBtn').disabled = false;
-
   const passages = lvl.passages;
   currentPassage = passages[Math.floor(Math.random() * passages.length)];
   renderPassage();
 }
 
 function renderPassage() {
-  document.getElementById('passageBox').innerHTML = currentPassage.split('').map((ch, i) =>
-    `<span class="${i === 0 ? 'current' : 'pending'}">${ch === ' ' ? '&nbsp;' : ch}</span>`
-  ).join('');
+  const words = currentPassage.split(' ');
+  let globalIdx = 0;
+  const parts = [];
+  words.forEach((word, wi) => {
+    const charSpans = word.split('').map(ch => {
+      const cls = globalIdx === 0 ? 'current' : 'pending';
+      const span = `<span class="${cls}" data-idx="${globalIdx}">${ch}</span>`;
+      globalIdx++;
+      return span;
+    }).join('');
+    parts.push(`<span class="word-block">${charSpans}</span>`);
+    if (wi < words.length - 1) {
+      parts.push(`<span class="pending space-char" data-idx="${globalIdx}">&nbsp;</span>`);
+      globalIdx++;
+    }
+  });
+  document.getElementById('passageBox').innerHTML = parts.join('');
 }
 
 function startRound() {
@@ -706,7 +775,6 @@ function startRound() {
   document.getElementById('inputBox').disabled = false;
   document.getElementById('inputBox').focus();
   document.getElementById('startBtn').disabled = true;
-
   timerInterval = setInterval(() => {
     timeLeft--;
     document.getElementById('timerVal').textContent = timeLeft + 's';
@@ -717,75 +785,59 @@ function startRound() {
 
 function updateStats() {
   const elapsed = LEVELS[currentLevel].time - timeLeft || 0.01;
-  const words = totalTyped / 5;
-  const wpm = Math.round(words / (elapsed / 60));
+  const wpm = Math.round((totalTyped / 5) / (elapsed / 60));
   const acc = totalTyped === 0 ? 100 : Math.round(((totalTyped - mistakes) / totalTyped) * 100);
   document.getElementById('wpmVal').textContent = wpm;
   document.getElementById('accVal').textContent = acc + '%';
-  document.getElementById('progressBar').style.width =
-    Math.min(100, Math.round((charIndex / currentPassage.length) * 100)) + '%';
+  document.getElementById('progressBar').style.width = Math.min(100, Math.round((charIndex / currentPassage.length) * 100)) + '%';
 }
 
 function finishRound(completed, timeUp = false) {
   clearInterval(timerInterval);
   finished = true;
   document.getElementById('inputBox').disabled = true;
-
   const lvl = LEVELS[currentLevel];
   const elapsed = lvl.time - timeLeft || 0.01;
-  const words = totalTyped / 5;
-  const wpm = Math.round(words / (elapsed / 60));
+  const wpm = Math.round((totalTyped / 5) / (elapsed / 60));
   const acc = totalTyped === 0 ? 0 : Math.round(((totalTyped - mistakes) / totalTyped) * 100);
   const passed = completed && acc === 100;
-
-  // Score calculation
   let points = 0;
   if (passed) {
     points = Math.round(wpm * (currentLevel + 1) * 10);
     totalScore += points;
     localStorage.setItem('tq_score', totalScore);
-
-    // Unlock next level
     const next = currentLevel + 1;
     if (next < LEVELS.length && !unlockedLevels.includes(next)) {
       unlockedLevels.push(next);
       localStorage.setItem('tq_unlocked', JSON.stringify(unlockedLevels));
     }
-
-    // Save best WPM
     if (!bestWPM[currentLevel] || wpm > bestWPM[currentLevel]) {
       bestWPM[currentLevel] = wpm;
       localStorage.setItem('tq_bestwpm', JSON.stringify(bestWPM));
+      showWpmToast(wpm);
     }
     const today = new Date().toDateString();
-
     if (lastPlayed !== today) {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        if (lastPlayed === yesterday.toDateString()) {
-            streak++;
-        } else {
-            streak = 1;
-        }
-        localStorage.setItem("tq_streak", streak);
-        localStorage.setItem("tq_last", today);
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      streak = (lastPlayed === yesterday.toDateString()) ? streak + 1 : 1;
+      localStorage.setItem('tq_streak', streak);
+      localStorage.setItem('tq_last', today);
+      lastPlayed = today;
     }
   }
-
   showResult(passed, timeUp, wpm, acc, points);
 }
 
 function showResult(passed, timeUp, wpm, acc, points) {
   const overlay = document.getElementById('resultOverlay');
   const isLastLevel = currentLevel === LEVELS.length - 1;
-
-  document.getElementById('resultEmoji').textContent = passed ? (isLastLevel ? '👑' : '🚀') : (timeUp ? '⏰' : '❌');
-  document.getElementById('resultTitle').textContent = passed ? (isLastLevel ? 'LEGENDARY!' : 'LEVEL CLEARED!') : (timeUp ? 'TIME\'S UP!' : 'ALMOST!');
+  document.getElementById('resultEmoji').textContent = passed ? (isLastLevel ? '👑' : '⭐⭐⭐') : (timeUp ? '⏰' : '❌');
+  document.getElementById('resultTitle').textContent = passed ? (isLastLevel ? 'LEGENDARY!' : 'LEVEL CLEARED!') : (timeUp ? "TIME'S UP!" : 'ALMOST!');
   document.getElementById('resultTitle').className = passed ? 'pass' : 'fail';
   document.getElementById('rWpm').textContent = wpm;
   document.getElementById('rAcc').textContent = acc + '%';
   document.getElementById('rScore').textContent = '+' + points;
-
   let msg = '';
   if (passed) {
     msg = isLastLevel
@@ -797,10 +849,8 @@ function showResult(passed, timeUp, wpm, acc, points) {
     msg = `Accuracy was ${acc}%. You need 100% to move to the next level. Keep practicing!`;
   }
   document.getElementById('resultMsg').textContent = msg;
-
   const btns = document.getElementById('resultBtns');
   btns.innerHTML = '';
-
   if (passed && !isLastLevel) {
     const nextBtn = document.createElement('button');
     nextBtn.className = 'btn-primary';
@@ -808,59 +858,72 @@ function showResult(passed, timeUp, wpm, acc, points) {
     nextBtn.onclick = () => { overlay.classList.remove('show'); currentLevel++; setupRound(); };
     btns.appendChild(nextBtn);
   }
-
   const retryBtn = document.createElement('button');
   retryBtn.className = passed ? 'btn-secondary' : 'btn-primary';
   retryBtn.textContent = 'Retry';
   retryBtn.onclick = () => { overlay.classList.remove('show'); setupRound(); };
   btns.appendChild(retryBtn);
-
   const menuBtn = document.createElement('button');
   menuBtn.className = 'btn-secondary';
   menuBtn.textContent = 'Levels';
   menuBtn.onclick = () => { overlay.classList.remove('show'); goBack(); };
   btns.appendChild(menuBtn);
-
   overlay.classList.add('show');
 }
 
-// ─── INPUT HANDLER ────────────────────────────────────────────────────────────
 document.getElementById('inputBox').addEventListener('input', function() {
   if (!started || finished) return;
   const typed = this.value;
-  const spans = document.querySelectorAll('#passageBox span');
-
+  // Select all character spans by data-idx (excludes .word-block wrappers)
+  const spans = Array.from(document.querySelectorAll('#passageBox [data-idx]'));
   charIndex = 0; mistakes = 0; totalTyped = typed.length;
-
   for (let i = 0; i < typed.length && i < currentPassage.length; i++) {
-    if (typed[i] === currentPassage[i]) {
-      spans[i].className = 'correct';
-    } else {
-      spans[i].className = 'wrong';
-      mistakes++;
-    }
+    spans[i].className = typed[i] === currentPassage[i] ? 'correct' : 'wrong';
+    if (typed[i] !== currentPassage[i]) mistakes++;
     charIndex = i + 1;
   }
-
-  // Reset remaining
   for (let i = charIndex; i < spans.length; i++) {
     spans[i].className = i === charIndex ? 'current' : 'pending';
   }
-
   updateStats();
-
-  // Shake on mistake
   if (mistakes > 0) {
     document.getElementById('passageBox').classList.remove('shake');
     void document.getElementById('passageBox').offsetWidth;
     document.getElementById('passageBox').classList.add('shake');
   }
-
   if (charIndex === currentPassage.length) finishRound(true);
 });
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
+
+function showWpmToast(wpm) {
+  const messages = [
+    `You just hit <strong>${wpm} WPM</strong> — that's your fastest ever on this level. You're on fire! 🔥`,
+    `<strong>${wpm} WPM</strong>? That's a new personal best! Your fingers are flying — keep going!`,
+    `New record: <strong>${wpm} WPM</strong>! Every practice session is paying off. Well done!`,
+    `Look at you — <strong>${wpm} WPM</strong> and a brand new personal best! You're getting seriously good at this.`,
+  ];
+  const msg = messages[Math.floor(Math.random() * messages.length)];
+  document.getElementById('toastMsg').innerHTML = msg;
+  document.getElementById('wpmToast').classList.add('show');
+}
+
+function closeWpmToast() {
+  document.getElementById('wpmToast').classList.remove('show');
+}
+
 renderLevelSelect();
 </script>
+
+<!-- WPM TOAST NOTIFICATION -->
+<div id="wpmToast">
+  <div id="wpmToastInner">
+    <div class="toast-emoji">🏆</div>
+    <div class="toast-text">
+      <div class="toast-title">New Personal Best!</div>
+      <div class="toast-msg" id="toastMsg"></div>
+    </div>
+    <button class="toast-close" onclick="closeWpmToast()">✕</button>
+  </div>
+</div>
 </body>
 </html>
