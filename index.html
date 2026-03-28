@@ -289,12 +289,16 @@
     #startBtn:hover { box-shadow: var(--glow); transform: translateY(-1px); }
     #startBtn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-    #backBtn {
-      background: transparent;
+    /* Back buttons — match panel style */
+    #backBtn, #pBackBtn {
+      background: var(--panel);
       border: 1px solid var(--border);
       color: var(--muted);
     }
-    #backBtn:hover { border-color: var(--accent2); color: var(--accent2); }
+    #backBtn:hover, #pBackBtn:hover {
+      border-color: var(--accent2);
+      color: var(--accent2);
+    }
 
     /* RESULT OVERLAY */
     #resultOverlay {
