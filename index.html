@@ -444,6 +444,19 @@
       letter-spacing: 1px;
     }
 
+
+    #practiceResultOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(6px);
+    }
+    #practiceResultOverlay.show { display: flex; }
+
     /* WPM TOAST */
     #wpmToast {
       position: fixed;
@@ -501,6 +514,119 @@
       pointer-events: all;
     }
     .toast-close:hover { background: rgba(245,237,227,0.15); }
+
+    /* ── PRACTICE MODE ─────────────────────────────────────────── */
+    #practiceScreen {
+      display: none;
+      max-width: 65%;
+      margin: 0 auto;
+    }
+
+    .practice-header {
+      text-align: center;
+      margin-bottom: 32px;
+      margin-top: 40px;
+    }
+    .practice-header h1 {
+      font-family: 'Dancing Script', cursive;
+      font-size: 48px;
+      color: var(--accent);
+      letter-spacing: 2px;
+    }
+    .practice-header p {
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 2px;
+      margin-top: 6px;
+      text-transform: uppercase;
+    }
+
+    .practice-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .practice-badge {
+      font-family: 'Playfair Display', serif;
+      font-size: 14px;
+      color: var(--accent);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 12px;
+    }
+
+    /* Custom text toggle */
+    .custom-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .toggle-label {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      cursor: pointer;
+    }
+    .toggle-switch input { display: none; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 12px;
+      transition: background 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-track { background: var(--accent); }
+    .toggle-knob {
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 18px; height: 18px;
+      background: #f5ede3;
+      border-radius: 50%;
+      transition: left 0.2s;
+    }
+    .toggle-switch input:checked ~ .toggle-knob { left: 23px; }
+
+    /* Custom text input area */
+    #customTextWrap {
+      display: none;
+      margin-bottom: 16px;
+    }
+    #customTextWrap textarea {
+      height: 100px;
+      border-color: var(--accent);
+      font-size: 15px;
+    }
+    .custom-hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Live stats row for practice */
+    .practice-stats {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* Practice result card (reuses .result-card styles, just needs extra stat) */
+    .practice-result-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
   </style>
 </head>
 <body>
@@ -524,6 +650,23 @@
     </div>
     <h2>Choose Your Level</h2>
     <div class="level-grid" id="levelGrid"></div>
+    <button onclick="openPractice()" style="
+      background: transparent;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+      font-family: 'Playfair Display', serif;
+      font-size: 14px;
+      letter-spacing: 2px;
+      padding: 14px 36px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+      margin-top: 8px;
+    " onmouseover="this.style.background='var(--accent)';this.style.color='#f5ede3';"
+       onmouseout="this.style.background='transparent';this.style.color='var(--accent)';">
+      ⭐ Practice Mode
+    </button>
   </div>
 </div>
 
@@ -554,6 +697,60 @@
   <div class="btn-row">
     <button id="backBtn" onclick="goBack()">← Levels</button>
     <button id="startBtn" onclick="startRound()">Start</button>
+  </div>
+</div>
+
+
+<!-- PRACTICE SCREEN -->
+<div id="practiceScreen">
+  <div class="practice-header">
+    <h1>TYPEQUEST</h1>
+    <p>Type, practice, repeat.</p>
+  </div>
+
+  <div class="practice-top-bar">
+    <div class="practice-badge">⭐ Practice Mode</div>
+    <div class="practice-stats stats-row">
+      <div class="stat-pill timer"><span class="lbl">TIME&nbsp;</span><span class="val" id="pTimerVal">0s</span></div>
+      <div class="stat-pill wpm"><span class="lbl">WPM&nbsp;</span><span class="val" id="pWpmVal">0</span></div>
+      <div class="stat-pill acc"><span class="lbl">ACC&nbsp;</span><span class="val" id="pAccVal">100%</span></div>
+    </div>
+  </div>
+
+  <div class="progress-wrap"><div class="progress-bar" id="pProgressBar"></div></div>
+
+  <!-- Custom text toggle -->
+  <div class="custom-toggle">
+    <span class="toggle-label">Use my own text</span>
+    <label class="toggle-switch">
+      <input type="checkbox" id="customToggle" onchange="toggleCustomText()">
+      <div class="toggle-track"></div>
+      <div class="toggle-knob"></div>
+    </label>
+  </div>
+
+  <!-- Custom text paste area -->
+  <div id="customTextWrap">
+    <textarea id="customTextInput" placeholder="Paste or type your own text here, then click Load Text..."></textarea>
+    <div class="custom-hint">Tip: paste anything — an email, an article, your own notes.</div>
+    <div style="margin-top:10px;">
+      <button onclick="loadCustomText()" style="
+        background: var(--accent); color: #f5ede3;
+        font-family:'Playfair Display',serif; font-size:12px;
+        letter-spacing:2px; padding:10px 20px; border:none;
+        border-radius:8px; cursor:pointer; text-transform:uppercase;">
+        Load Text
+      </button>
+    </div>
+  </div>
+
+  <div class="passage-wrap" id="pPassageBox"></div>
+
+  <textarea id="pInputBox" placeholder="Press Start — then type here..." disabled></textarea>
+
+  <div class="btn-row">
+    <button id="pBackBtn" onclick="closePractice()">← Levels</button>
+    <button id="pStartBtn" onclick="startPractice()" style="background:var(--accent);color:#f5ede3;font-weight:700;">Start</button>
   </div>
 </div>
 
@@ -895,6 +1092,178 @@ document.getElementById('inputBox').addEventListener('input', function() {
 });
 
 
+
+// ── PRACTICE MODE ────────────────────────────────────────────────────────────
+const PRACTICE_PASSAGES = [
+  "The secret of getting ahead is getting started. The secret of getting started is breaking your complex overwhelming tasks into small manageable tasks, and then starting on the first one.",
+  "In the middle of every difficulty lies opportunity. It is not the strongest of the species that survives, nor the most intelligent, but the one most responsive to change.",
+  "You don't have to be great to start, but you have to start to be great. Every expert was once a beginner. Every pro was once an amateur. Every icon was once an unknown.",
+  "Reading is to the mind what exercise is to the body. A reader lives a thousand lives before he dies. The man who never reads lives only one. Books are a uniquely portable magic.",
+  "The best time to plant a tree was twenty years ago. The second best time is now. Do not wait until the conditions are perfect to begin. Beginning makes the conditions perfect.",
+  "Simplicity is the ultimate sophistication. The ability to simplify means to eliminate the unnecessary so that the necessary may speak. In character, in manners, in style — simplicity is the supreme excellence.",
+];
+
+let pPassage = '';
+let pCharIndex = 0, pMistakes = 0, pTotalTyped = 0;
+let pElapsed = 0, pTimerInterval = null;
+let pStarted = false, pFinished = false;
+let pUsingCustom = false;
+
+function openPractice() {
+  document.querySelector('.wrapper').style.display = 'none';
+  document.getElementById('practiceScreen').style.display = 'block';
+  document.getElementById('customToggle').checked = false;
+  document.getElementById('customTextWrap').style.display = 'none';
+  pUsingCustom = false;
+  setupPractice();
+}
+
+function closePractice() {
+  clearInterval(pTimerInterval);
+  document.getElementById('practiceScreen').style.display = 'none';
+  document.querySelector('.wrapper').style.display = 'block';
+  document.getElementById('levelSelect').style.display = 'flex';
+  renderLevelSelect();
+}
+
+function toggleCustomText() {
+  const on = document.getElementById('customToggle').checked;
+  document.getElementById('customTextWrap').style.display = on ? 'block' : 'none';
+  pUsingCustom = on;
+  if (!on) setupPractice(); // reload a random passage when toggled off
+}
+
+function loadCustomText() {
+  const raw = document.getElementById('customTextInput').value.trim();
+  if (!raw) return;
+  // Normalise whitespace
+  pPassage = raw.replace(/\s+/g, ' ');
+  resetPracticeRound();
+}
+
+function setupPractice() {
+  pPassage = PRACTICE_PASSAGES[Math.floor(Math.random() * PRACTICE_PASSAGES.length)];
+  resetPracticeRound();
+}
+
+function resetPracticeRound() {
+  clearInterval(pTimerInterval);
+  pCharIndex = 0; pMistakes = 0; pTotalTyped = 0;
+  pElapsed = 0; pStarted = false; pFinished = false;
+
+  document.getElementById('pTimerVal').textContent = '0s';
+  document.getElementById('pWpmVal').textContent = '0';
+  document.getElementById('pAccVal').textContent = '100%';
+  document.getElementById('pProgressBar').style.width = '0%';
+  document.getElementById('pInputBox').value = '';
+  document.getElementById('pInputBox').disabled = true;
+  document.getElementById('pStartBtn').disabled = false;
+  renderPracticePassage();
+}
+
+function renderPracticePassage() {
+  const words = pPassage.split(' ');
+  let globalIdx = 0;
+  const parts = [];
+  words.forEach((word, wi) => {
+    const charSpans = word.split('').map(ch => {
+      const cls = globalIdx === 0 ? 'current' : 'pending';
+      const span = `<span class="${cls}" data-idx="${globalIdx}">${ch}</span>`;
+      globalIdx++;
+      return span;
+    }).join('');
+    parts.push(`<span class="word-block">${charSpans}</span>`);
+    if (wi < words.length - 1) {
+      parts.push(`<span class="pending space-char" data-idx="${globalIdx}">&nbsp;</span>`);
+      globalIdx++;
+    }
+  });
+  document.getElementById('pPassageBox').innerHTML = parts.join('');
+}
+
+function startPractice() {
+  if (pStarted) return;
+  pStarted = true;
+  document.getElementById('pInputBox').disabled = false;
+  document.getElementById('pInputBox').focus();
+  document.getElementById('pStartBtn').disabled = true;
+
+  // Count up instead of down
+  pTimerInterval = setInterval(() => {
+    pElapsed++;
+    document.getElementById('pTimerVal').textContent = pElapsed + 's';
+    updatePracticeStats();
+  }, 1000);
+}
+
+function updatePracticeStats() {
+  const elapsed = pElapsed || 0.01;
+  const wpm = Math.round((pTotalTyped / 5) / (elapsed / 60));
+  const acc = pTotalTyped === 0 ? 100 : Math.round(((pTotalTyped - pMistakes) / pTotalTyped) * 100);
+  document.getElementById('pWpmVal').textContent = wpm;
+  document.getElementById('pAccVal').textContent = acc + '%';
+  document.getElementById('pProgressBar').style.width =
+    Math.min(100, Math.round((pCharIndex / pPassage.length) * 100)) + '%';
+}
+
+function finishPractice() {
+  clearInterval(pTimerInterval);
+  pFinished = true;
+  document.getElementById('pInputBox').disabled = true;
+
+  const elapsed = pElapsed || 0.01;
+  const wpm = Math.round((pTotalTyped / 5) / (elapsed / 60));
+  const acc = pTotalTyped === 0 ? 100 : Math.round(((pTotalTyped - pMistakes) / pTotalTyped) * 100);
+
+  // Friendly message
+  const msgs = [
+    `Great session! You typed at ${wpm} WPM with ${acc}% accuracy. No pressure, just progress.`,
+    `Solid effort! ${wpm} WPM and ${acc}% accuracy. Every rep makes you faster.`,
+    `Nice work! You finished in ${elapsed}s — ${wpm} WPM and ${acc}% accuracy. Keep it up!`,
+  ];
+
+  document.getElementById('prWpm').textContent = wpm;
+  document.getElementById('prAcc').textContent = acc + '%';
+  document.getElementById('prTime').textContent = elapsed + 's';
+  document.getElementById('prChars').textContent = pTotalTyped;
+  document.getElementById('pResultMsg').textContent = msgs[Math.floor(Math.random() * msgs.length)];
+  document.getElementById('practiceResultOverlay').classList.add('show');
+}
+
+function retryPractice() {
+  document.getElementById('practiceResultOverlay').classList.remove('show');
+  resetPracticeRound();
+}
+
+function closePracticeResult() {
+  document.getElementById('practiceResultOverlay').classList.remove('show');
+  closePractice();
+}
+
+// Input handler for practice
+document.getElementById('pInputBox').addEventListener('input', function() {
+  if (!pStarted || pFinished) return;
+  const typed = this.value;
+  const spans = Array.from(document.querySelectorAll('#pPassageBox [data-idx]'));
+  pCharIndex = 0; pMistakes = 0; pTotalTyped = typed.length;
+
+  for (let i = 0; i < typed.length && i < pPassage.length; i++) {
+    spans[i].className = typed[i] === pPassage[i] ? 'correct' : 'wrong';
+    if (typed[i] !== pPassage[i]) pMistakes++;
+    pCharIndex = i + 1;
+  }
+  for (let i = pCharIndex; i < spans.length; i++) {
+    spans[i].className = i === pCharIndex ? 'current' : 'pending';
+  }
+  updatePracticeStats();
+  if (pMistakes > 0) {
+    document.getElementById('pPassageBox').classList.remove('shake');
+    void document.getElementById('pPassageBox').offsetWidth;
+    document.getElementById('pPassageBox').classList.add('shake');
+  }
+  if (pCharIndex === pPassage.length) finishPractice();
+});
+
 function showWpmToast(wpm) {
   const messages = [
     `You just hit <strong>${wpm} WPM</strong> — that's your fastest ever on this level. You're on fire! 🔥`,
@@ -925,5 +1294,25 @@ renderLevelSelect();
     <button class="toast-close" onclick="closeWpmToast()">✕</button>
   </div>
 </div>
+
+<!-- PRACTICE RESULT OVERLAY -->
+<div id="practiceResultOverlay">
+  <div class="result-card">
+    <div class="emoji">⭐</div>
+    <h2 class="pass" style="font-size:22px; margin-bottom:6px;">Practice Complete!</h2>
+    <p class="msg" id="pResultMsg"></p>
+    <div class="practice-result-stats">
+      <div class="r-stat"><div class="rv" id="prWpm" style="color:var(--accent)">0</div><div class="rl">WPM</div></div>
+      <div class="r-stat"><div class="rv" id="prAcc" style="color:var(--accent3)">0%</div><div class="rl">Accuracy</div></div>
+      <div class="r-stat"><div class="rv" id="prTime" style="color:var(--accent2)">0s</div><div class="rl">Time</div></div>
+      <div class="r-stat"><div class="rv" id="prChars" style="color:var(--accent)">0</div><div class="rl">Chars</div></div>
+    </div>
+    <div class="btn-group">
+      <button class="btn-primary" onclick="retryPractice()">Try Again</button>
+      <button class="btn-secondary" onclick="closePracticeResult()">← Levels</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
