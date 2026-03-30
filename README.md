@@ -22,3 +22,8 @@ https://nehajsreenivas.github.io/typing_speedtest
 - index.html — page structure
 - style.css — all styling
 - script.js — all game logic
+
+## Libraries & Fonts
+- Google Fonts – Playfair Display (used for all UI text)
+- Google Fonts – Dancing Script (used for the TypeQuest heading)
+- No external JavaScript libraries used — built with vanilla JS only
