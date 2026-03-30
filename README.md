@@ -1,6 +1,6 @@
-# TypeQuest – Typing Speed Game
+# TypeQuest 
 
-A browser-based typing game built with HTML, CSS, and JavaScript.
+TypeQuest is a browser-based typing game built with HTML, CSS, and JavaScript. It turns typing practice into a game — with levels, streaks, and personal bests — making it easy to improve your speed and accuracy without it feeling like a chore.
 
 ## Features
 - 10 progressive levels from basic to advance
